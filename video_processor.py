@@ -33,6 +33,9 @@ def optimize_video(input_path, output_path, max_width=720, max_height=480, targe
         # Get original dimensions
         width, height = video.size
         
+        print(f"\nOriginal video dimensions: {width}x{height}")
+        print(f"Target max dimensions: {max_width}x{max_height}")
+        
         # Calculate new dimensions while maintaining aspect ratio
         if width > max_width or height > max_height:
             if width/height > max_width/max_height:
@@ -47,6 +50,8 @@ def optimize_video(input_path, output_path, max_width=720, max_height=480, targe
         # Ensure dimensions are even numbers
         new_width = new_width if new_width % 2 == 0 else new_width - 1
         new_height = new_height if new_height % 2 == 0 else new_height - 1
+        
+        print(f"Calculated new dimensions: {new_width}x{new_height}")
         
         # Resize video
         video = video.resize((new_width, new_height))
@@ -128,7 +133,7 @@ def extract_first_frame(video_path, output_path):
         print(f"Error extracting frame from {video_path}: {str(e)}")
         return False
 
-def process_videos_from_urls(urls_file):
+def process_videos_from_urls(urls_file, max_width=720, max_height=480):
     """
     Process videos from URLs listed in a file using keys as filenames
     """
@@ -177,8 +182,8 @@ def process_videos_from_urls(urls_file):
             if not download_video(url, download_path):
                 continue
             
-            # Optimize video
-            if optimize_video(download_path, optimized_path):
+            # Optimize video with custom dimensions
+            if optimize_video(download_path, optimized_path, max_width=max_width, max_height=max_height):
                 # Extract first frame
                 extract_first_frame(optimized_path, frame_path)
                 
