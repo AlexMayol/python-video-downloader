@@ -1,6 +1,7 @@
 import os
 import requests
 import subprocess
+import json
 from moviepy.editor import VideoFileClip
 from PIL import Image
 import numpy as np
@@ -133,105 +134,120 @@ def extract_first_frame(video_path, output_path):
         print(f"Error extracting frame from {video_path}: {str(e)}")
         return False
 
-def process_videos_from_urls(urls_file, max_width=720, max_height=480):
+def process_videos_from_json(json_file):
     """
-    Process videos from URLs listed in a file using keys as filenames
+    Process videos from a JSON configuration file
     """
-    script_dir = os.path.dirname(urls_file)
-    
-    # Create all necessary directories
-    downloads_dir = os.path.join(script_dir, "downloads")
-    optimized_dir = os.path.join(script_dir, "optimized")
-    frames_dir = os.path.join(script_dir, "frames")
-    dist_dir = os.path.join(script_dir, "dist")
-    
-    # Create working directories
-    for directory in [downloads_dir, optimized_dir, frames_dir]:
-        os.makedirs(directory, exist_ok=True)
-    
-    # Remove old dist directory if exists and create new one
-    if os.path.exists(dist_dir):
-        import shutil
-        shutil.rmtree(dist_dir)
-    os.makedirs(dist_dir)
-    
-    # Read URLs from file and parse them
-    with open(urls_file, 'r') as f:
-        # Skip empty lines and parse key: URL format
-        lines = [line.strip() for line in f if line.strip()]
-        video_data = []
-        for line in lines:
-            if ': ' in line:
-                key, url = [part.strip() for part in line.split(':', 1)]
-                video_data.append((key, url))
-            else:
-                print(f"Skipping malformed line: {line}")
-                continue
-    
-    # Process each video
-    for key, url in video_data:
-        try:
-            # Create paths with key-based names
-            download_path = os.path.join(downloads_dir, f"{key}.mp4")
-            optimized_path = os.path.join(optimized_dir, f"{key}.mp4")
-            frame_path = os.path.join(frames_dir, f"{key}_poster.webp")
-            
-            print(f"\nProcessing {key}...")
-            
-            # Download video
-            if not download_video(url, download_path):
-                continue
-            
-            # Optimize video with custom dimensions
-            if optimize_video(download_path, optimized_path, max_width=max_width, max_height=max_height):
-                # Extract first frame
-                extract_first_frame(optimized_path, frame_path)
-                
-                # Clean up downloaded file
-                os.remove(download_path)
-                
-        except Exception as e:
-            print(f"Error processing {key}: {str(e)}")
-    
-    # Move processed files to dist directory
-    print("\nMoving processed files to dist directory...")
-    for file in os.listdir(optimized_dir):
-        if file.endswith('.mp4'):
-            src = os.path.join(optimized_dir, file)
-            dst = os.path.join(dist_dir, file)
-            os.rename(src, dst)
-    
-    for file in os.listdir(frames_dir):
-        if file.endswith('.webp'):
-            src = os.path.join(frames_dir, file)
-            dst = os.path.join(dist_dir, file)
-            os.rename(src, dst)
-    
-    # Clean up working directories
-    os.rmdir(downloads_dir)
-    os.rmdir(optimized_dir)
-    os.rmdir(frames_dir)
-    
-    # Create zip archive
-    print("\nCreating zip archive...")
-    import subprocess
-    zip_path = dist_dir + '.zip'
-    if os.path.exists(zip_path):
-        os.remove(zip_path)
-    
     try:
-        subprocess.run(['zip', '-r', zip_path, dist_dir], check=True)
-        print(f"\nArchive created successfully: {os.path.basename(zip_path)}")
+        # Read JSON configuration
+        with open(json_file, 'r') as f:
+            config = json.load(f)
         
-        # Get the size of the zip file
-        zip_size = os.path.getsize(zip_path) / (1024 * 1024)  # Convert to MB
-        print(f"Archive size: {zip_size:.2f} MB")
+        # Get configuration values
+        json_max_width = config.get('config', {}).get('max_width', 720)
+        json_max_height = config.get('config', {}).get('max_height', 480)
         
-    except subprocess.CalledProcessError as e:
-        print(f"Error creating archive: {str(e)}")
+        # Use CLI arguments if provided, otherwise use JSON config
+        final_max_width = json_max_width
+        final_max_height = json_max_height
+        
+        print("\nUsing the following configuration:")
+        print(f"Max width: {final_max_width}px")
+        print(f"Max height: {final_max_height}px")
+        
+        script_dir = os.path.dirname(json_file)
+        
+        # Create all necessary directories
+        downloads_dir = os.path.join(script_dir, "downloads")
+        optimized_dir = os.path.join(script_dir, "optimized")
+        frames_dir = os.path.join(script_dir, "frames")
+        dist_dir = os.path.join(script_dir, "dist")
+        
+        # Create working directories
+        for directory in [downloads_dir, optimized_dir, frames_dir]:
+            os.makedirs(directory, exist_ok=True)
+        
+        # Remove old dist directory if exists and create new one
+        if os.path.exists(dist_dir):
+            import shutil
+            shutil.rmtree(dist_dir)
+        os.makedirs(dist_dir)
+        
+        # Process each video from the JSON configuration
+        for video in config.get('videos', []):
+            name = video.get('name')
+            url = video.get('url')
+            
+            if not name or not url:
+                print(f"Skipping invalid video entry: {video}")
+                continue
+            
+            try:
+                # Create paths with name-based names
+                download_path = os.path.join(downloads_dir, f"{name}.mp4")
+                optimized_path = os.path.join(optimized_dir, f"{name}.mp4")
+                frame_path = os.path.join(frames_dir, f"{name}_poster.webp")
+                
+                print(f"\nProcessing {name}...")
+                
+                # Download video
+                if not download_video(url, download_path):
+                    continue
+                
+                # Optimize video with custom dimensions
+                if optimize_video(download_path, optimized_path, max_width=final_max_width, max_height=final_max_height):
+                    # Extract first frame
+                    extract_first_frame(optimized_path, frame_path)
+                    
+                    # Clean up downloaded file
+                    os.remove(download_path)
+                    
+            except Exception as e:
+                print(f"Error processing {name}: {str(e)}")
+        
+        # Move processed files to dist directory
+        print("\nMoving processed files to dist directory...")
+        for file in os.listdir(optimized_dir):
+            if file.endswith('.mp4'):
+                src = os.path.join(optimized_dir, file)
+                dst = os.path.join(dist_dir, file)
+                os.rename(src, dst)
+        
+        for file in os.listdir(frames_dir):
+            if file.endswith('.webp'):
+                src = os.path.join(frames_dir, file)
+                dst = os.path.join(dist_dir, file)
+                os.rename(src, dst)
+        
+        # Clean up working directories
+        os.rmdir(downloads_dir)
+        os.rmdir(optimized_dir)
+        os.rmdir(frames_dir)
+        
+        # Create zip archive
+        print("\nCreating zip archive...")
+        zip_path = dist_dir + '.zip'
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+        
+        try:
+            subprocess.run(['zip', '-r', zip_path, dist_dir], check=True)
+            print(f"\nArchive created successfully: {os.path.basename(zip_path)}")
+            
+            # Get the size of the zip file
+            zip_size = os.path.getsize(zip_path) / (1024 * 1024)  # Convert to MB
+            print(f"Archive size: {zip_size:.2f} MB")
+            
+        except subprocess.CalledProcessError as e:
+            print(f"Error creating archive: {str(e)}")
+            
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON file: {str(e)}")
+    except Exception as e:
+        print(f"Error processing videos: {str(e)}")
 
 if __name__ == "__main__":
     # Get the directory where the script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    urls_file = os.path.join(script_dir, "urls.txt")
-    process_videos_from_urls(urls_file) 
+    json_file = os.path.join(script_dir, "videos.json")
+    process_videos_from_json(json_file) 
