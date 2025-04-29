@@ -23,9 +23,9 @@ def download_video(url, output_path):
         print(f"Error downloading {url}: {str(e)}")
         return False
 
-def optimize_video(input_path, output_path, max_width=720, max_height=480, target_bitrate="500k"):
+def optimize_video(input_path, output_path, max_width=720, max_height=480, compression_strategy="balanced"):
     """
-    Optimize video size by reducing resolution and bitrate
+    Optimize video size by reducing resolution and applying compression
     """
     try:
         # Load the video
@@ -36,6 +36,15 @@ def optimize_video(input_path, output_path, max_width=720, max_height=480, targe
         
         print(f"\nOriginal video dimensions: {width}x{height}")
         print(f"Target max dimensions: {max_width}x{max_height}")
+        print(f"Compression strategy: {compression_strategy}")
+        
+        # For original strategy, just copy the file without any processing
+        if compression_strategy == "original":
+            print("Using original strategy - copying file without compression...")
+            import shutil
+            shutil.copy2(input_path, output_path)
+            video.close()
+            return True
         
         # Calculate new dimensions while maintaining aspect ratio
         if width > max_width or height > max_height:
@@ -57,20 +66,37 @@ def optimize_video(input_path, output_path, max_width=720, max_height=480, targe
         # Resize video
         video = video.resize((new_width, new_height))
         
-        # Write optimized video with more aggressive compression
+        # Set compression parameters based on strategy
+        if compression_strategy == "relaxed":
+            # Lossless compression with high quality
+            crf = 18
+            preset = 'medium'
+            bitrate = "1000k"
+        elif compression_strategy == "aggressive":
+            # Lossy compression with smaller file size
+            crf = 28
+            preset = 'veryslow'
+            bitrate = "500k"
+        else:  # balanced
+            # Balanced compression
+            crf = 23
+            preset = 'slow'
+            bitrate = "750k"
+        
+        # Write optimized video with selected compression settings
         video.write_videofile(
             output_path,
             codec='libx264',
             audio_codec='aac',
-            bitrate=target_bitrate,
-            preset='veryslow',  # More aggressive compression
-            threads=4,  # Use multiple threads for faster processing
+            bitrate=bitrate,
+            preset=preset,
+            threads=4,
             ffmpeg_params=[
-                '-crf', '28',  # Constant Rate Factor (lower = better quality, higher = smaller size)
-                '-movflags', '+faststart',  # Enable fast start for web playback
-                '-pix_fmt', 'yuv420p',  # Use 4:2:0 chroma subsampling
-                '-profile:v', 'baseline',  # Use baseline profile for better compatibility
-                '-level', '3.1'  # Adjusted level for better compatibility
+                '-crf', str(crf),
+                '-movflags', '+faststart',
+                '-pix_fmt', 'yuv420p',
+                '-profile:v', 'baseline',
+                '-level', '3.1'
             ]
         )
         
@@ -146,14 +172,12 @@ def process_videos_from_json(json_file):
         # Get configuration values
         json_max_width = config.get('config', {}).get('max_width', 720)
         json_max_height = config.get('config', {}).get('max_height', 480)
-        
-        # Use CLI arguments if provided, otherwise use JSON config
-        final_max_width = json_max_width
-        final_max_height = json_max_height
+        compression_strategy = config.get('config', {}).get('compression_strategy', 'balanced')
         
         print("\nUsing the following configuration:")
-        print(f"Max width: {final_max_width}px")
-        print(f"Max height: {final_max_height}px")
+        print(f"Max width: {json_max_width}px")
+        print(f"Max height: {json_max_height}px")
+        print(f"Compression strategy: {compression_strategy}")
         
         script_dir = os.path.dirname(json_file)
         
@@ -194,8 +218,14 @@ def process_videos_from_json(json_file):
                 if not download_video(url, download_path):
                     continue
                 
-                # Optimize video with custom dimensions
-                if optimize_video(download_path, optimized_path, max_width=final_max_width, max_height=final_max_height):
+                # Optimize video with custom dimensions and compression strategy
+                if optimize_video(
+                    download_path, 
+                    optimized_path, 
+                    max_width=json_max_width, 
+                    max_height=json_max_height,
+                    compression_strategy=compression_strategy
+                ):
                     # Extract first frame
                     extract_first_frame(optimized_path, frame_path)
                     

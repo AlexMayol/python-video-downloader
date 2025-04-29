@@ -1,16 +1,19 @@
 {
     "config": {
         "max_width": 300,
-        "max_height": 300
+        "max_height": 300,
+        "__available_strategies": [
+            "original",
+            "relaxed",
+            "balanced",
+            "aggressive"
+        ],
+        "compression_strategy": "aggressive"
     },
     "videos": [
         {
             "name": "arc  RIght",
             "url": "https://d1xarpci4ikg0w.cloudfront.net/bafae065-4c19-427b-a0b1-ea9bf40b9de1.mp4"
-        },
-        {
-            "name": "crash_zoom_out",
-            "url": "https://d1xarpci4ikg0w.cloudfront.net/5eb71421-c82e-441a-8c1a-1d0f4cbc1ccc.mp4"
         }
     ]
 }
