@@ -6,6 +6,7 @@ from moviepy.editor import VideoFileClip
 from PIL import Image
 import numpy as np
 from urllib.parse import urlparse
+from moviepy.video.fx.resize import resize
 
 def download_video(url, output_path):
     """
@@ -64,7 +65,7 @@ def optimize_video(input_path, output_path, max_width=720, max_height=480, compr
         print(f"Calculated new dimensions: {new_width}x{new_height}")
         
         # Resize video
-        video = video.resize((new_width, new_height))
+        video = resize(video, (new_width, new_height))
         
         # Set compression parameters based on strategy
         if compression_strategy == "relaxed":
