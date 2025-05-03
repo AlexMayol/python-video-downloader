@@ -9,7 +9,8 @@ venv/bin/activate:
 # Install dependencies from requirements.txt
 # Also patches moviepy for Pillow >=10 compatibility
 
-deps: venv/bin/activate
+deps:
+	make venv/bin/activate
 	. venv/bin/activate && pip install --upgrade -r requirements.txt
 	# Patch moviepy for Pillow >=10
 	@sed -i '' 's/Image.ANTIALIAS/Image.Resampling.LANCZOS/g' venv/lib/python3.13/site-packages/moviepy/video/fx/resize.py || true

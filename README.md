@@ -9,32 +9,50 @@ A tool for downloading and processing videos with configurable compression strat
 - Automatic thumbnail generation
 - Output to zip archive
 
-## Installation
+## Installation & Setup
 
-### From Source
-
-1. Clone the repository:
+1. **Clone the repository:**
 
 ```bash
 git clone <repository-url>
 cd python-video-downloader
 ```
 
-2. Install dependencies:
+2. **Install dependencies and set up the environment:**
 
 ```bash
 make deps
 ```
 
-3. Build the executable:
-
-```bash
-make build
-```
+This will create a Python virtual environment, install all required dependencies from `requirements.txt`, and patch `moviepy` for compatibility with modern Pillow versions.
 
 ## Usage
 
-### Configuration
+### Run the Project
+
+```bash
+make run
+```
+
+This will activate the virtual environment and run the main video processing script (`video_processor.py`).
+
+### Clean Up
+
+To remove the virtual environment and all generated files/directories:
+
+```bash
+make clean
+```
+
+### Help
+
+To see all available Makefile commands:
+
+```bash
+make help
+```
+
+## Configuration
 
 Create a `videos.json` file in the same directory as the executable with the following structure:
 
@@ -71,44 +89,14 @@ The application creates:
 
 ## Development
 
-### Building from Source
-
-- Build the executable:
-
-```bash
-make build
-```
-
-- Clean build artifacts:
-
-```bash
-make clean
-```
-
-- Rebuild everything:
-
-```bash
-make rebuild
-```
-
-### Available Make Commands
-
-```bash
-make build    # Build the executable
-make clean    # Clean up build artifacts
-make deps     # Install dependencies
-make rebuild  # Clean and rebuild
-make help     # Show help message
-```
+- To install or update dependencies, edit `requirements.txt` and run `make deps`.
+- To run the project, use `make run`.
+- To clean up, use `make clean`.
 
 ## Requirements
 
 - Python 3.11+
-- Required Python packages (installed via `make deps`):
-  - moviepy
-  - requests
-  - pillow
-  - numpy
+- GNU Make
 
 ## Notes
 

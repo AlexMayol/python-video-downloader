@@ -1,7 +1,7 @@
 {
     "config": {
-        "max_width": 300,
-        "max_height": 300,
+        "max_width": 600,
+        "max_height": 500,
         "__available_strategies": [
             "original",
             "relaxed",
@@ -12,8 +12,8 @@
     },
     "videos": [
         {
-            "name": "arc  RIght",
-            "url": "https://d1xarpci4ikg0w.cloudfront.net/bafae065-4c19-427b-a0b1-ea9bf40b9de1.mp4"
+            "name": "example_name",
+            "url": "https://example.com/video.mp4"
         }
     ]
 }
