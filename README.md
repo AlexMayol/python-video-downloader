@@ -14,7 +14,7 @@ A tool for downloading and processing videos with configurable compression strat
 1. **Clone the repository:**
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/AlexMayol/python-video-downloader
 cd python-video-downloader
 ```
 
@@ -24,17 +24,49 @@ cd python-video-downloader
 make deps
 ```
 
-This will create a Python virtual environment, install all required dependencies from `requirements.txt`, and patch `moviepy` for compatibility with modern Pillow versions.
+This will create a Python virtual environment, install all required dependencies from `requirements.txt`.
 
 ## Usage
 
-### Run the Project
+### 1. Prepare your video list (videos.json)
+
+Before running the project, create or edit a `videos.json` file in the project directory. This file should contain the list of videos you want to download and process, along with configuration options. For example:
+
+```json
+{
+  "config": {
+    "max_width": 300,
+    "max_height": 300,
+    "compression_strategy": "balanced"
+  },
+  "videos": [
+    {
+      "name": "video1",
+      "url": "https://example.com/video1.mp4"
+    },
+    {
+      "name": "video2",
+      "url": "https://example.com/video2.mp4"
+    }
+  ]
+}
+```
+
+- Each entry in the `videos` array should have a unique `name` and a direct `url` to the video file you want to download.
+- The `config` section allows you to set the maximum width/height and compression strategy for all videos.
+
+### 2. Run the Project
 
 ```bash
 make run
 ```
 
-This will activate the virtual environment and run the main video processing script (`video_processor.py`).
+This will activate the virtual environment and run the main video processing script (`video_processor.py`). The script will:
+
+- Download each video listed in `videos.json`.
+- Optimize and compress the videos according to your configuration.
+- Extract a thumbnail (poster) from each video.
+- Save all processed files in the `dist` directory and create a zip archive.
 
 ### Clean Up
 
