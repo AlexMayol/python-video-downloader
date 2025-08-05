@@ -24,7 +24,7 @@ def download_video(url, output_path):
         print(f"Error downloading {url}: {str(e)}")
         return False
 
-def optimize_video(input_path, output_path, max_width=720, max_height=480, compression_strategy="balanced"):
+def optimize_video(input_path, output_path, max_width=720, max_height=480, compression_strategy="balanced", output_format="mp4"):
     """
     Optimize video size by reducing resolution and applying compression
     """
@@ -38,6 +38,7 @@ def optimize_video(input_path, output_path, max_width=720, max_height=480, compr
         print(f"\nOriginal video dimensions: {width}x{height}")
         print(f"Target max dimensions: {max_width}x{max_height}")
         print(f"Compression strategy: {compression_strategy}")
+        print(f"Output format: {output_format}")
         
         # For original strategy, just copy the file without any processing
         if compression_strategy == "original":
@@ -84,21 +85,35 @@ def optimize_video(input_path, output_path, max_width=720, max_height=480, compr
             preset = 'slow'
             bitrate = "750k"
         
-        # Write optimized video with selected compression settings
-        video.write_videofile(
-            output_path,
-            codec='libx264',
-            audio_codec='aac',
-            bitrate=bitrate,
-            preset=preset,
-            threads=4,
-            ffmpeg_params=[
+        # Set codec and parameters based on output format
+        if output_format.lower() == "webm":
+            codec = 'libvpx-vp9'
+            audio_codec = 'libvorbis'
+            ffmpeg_params = [
+                '-crf', str(crf),
+                '-b:v', '0',  # Use CRF mode for VP9
+                '-pix_fmt', 'yuv420p'
+            ]
+        else:  # mp4 (default)
+            codec = 'libx264'
+            audio_codec = 'aac'
+            ffmpeg_params = [
                 '-crf', str(crf),
                 '-movflags', '+faststart',
                 '-pix_fmt', 'yuv420p',
                 '-profile:v', 'baseline',
                 '-level', '3.1'
             ]
+        
+        # Write optimized video with selected compression settings
+        video.write_videofile(
+            output_path,
+            codec=codec,
+            audio_codec=audio_codec,
+            bitrate=bitrate,
+            preset=preset,
+            threads=4,
+            ffmpeg_params=ffmpeg_params
         )
         
         # Get original and new file sizes
@@ -202,15 +217,31 @@ def process_videos_from_json(json_file):
         for video in config.get('videos', []):
             name = video.get('name')
             url = video.get('url')
+            output_format = video.get('format', 'mp4')  # Default to mp4 if no format specified
             
-            if not name or not url:
-                print(f"Skipping invalid video entry: {video}")
+            if not url:
+                print(f"Skipping video entry without URL: {video}")
                 continue
             
+            # If name is not provided, extract it from the URL
+            if not name:
+                parsed_url = urlparse(url)
+                filename = os.path.basename(parsed_url.path)
+                # Remove extension to get clean name
+                name = os.path.splitext(filename)[0]
+                if not name:  # If still empty, use a fallback
+                    name = f"video_{len(config.get('videos', []))}"
+                print(f"No name provided, using filename from URL: {name}")
+            
+            # Validate format
+            if output_format.lower() not in ['mp4', 'webm']:
+                print(f"Unsupported format '{output_format}' for video '{name}'. Using mp4 instead.")
+                output_format = 'mp4'
+            
             try:
-                # Create paths with name-based names
-                download_path = os.path.join(downloads_dir, f"{name}.mp4")
-                optimized_path = os.path.join(optimized_dir, f"{name}.mp4")
+                # Create paths with name-based names (using the specified output format)
+                download_path = os.path.join(downloads_dir, f"{name}.mp4")  # Always download as mp4
+                optimized_path = os.path.join(optimized_dir, f"{name}.{output_format}")
                 frame_path = os.path.join(frames_dir, f"{name}_poster.webp")
                 
                 print(f"\nProcessing {name}...")
@@ -219,13 +250,14 @@ def process_videos_from_json(json_file):
                 if not download_video(url, download_path):
                     continue
                 
-                # Optimize video with custom dimensions and compression strategy
+                # Optimize video with custom dimensions, compression strategy, and format
                 if optimize_video(
                     download_path, 
                     optimized_path, 
                     max_width=json_max_width, 
                     max_height=json_max_height,
-                    compression_strategy=compression_strategy
+                    compression_strategy=compression_strategy,
+                    output_format=output_format
                 ):
                     # Extract first frame
                     extract_first_frame(optimized_path, frame_path)
@@ -239,7 +271,7 @@ def process_videos_from_json(json_file):
         # Move processed files to dist directory
         print("\nMoving processed files to dist directory...")
         for file in os.listdir(optimized_dir):
-            if file.endswith('.mp4'):
+            if file.endswith(('.mp4', '.webm')):
                 src = os.path.join(optimized_dir, file)
                 dst = os.path.join(dist_dir, file)
                 os.rename(src, dst)

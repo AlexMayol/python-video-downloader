@@ -13,7 +13,7 @@ deps:
 	make venv/bin/activate
 	. venv/bin/activate && pip install --upgrade -r requirements.txt
 	# Patch moviepy for Pillow >=10
-	@sed -i '' 's/Image.ANTIALIAS/Image.Resampling.LANCZOS/g' venv/lib/python3.13/site-packages/moviepy/video/fx/resize.py || true
+	@find venv -name "resize.py" -path "*/moviepy/video/fx/*" -exec sed -i '' 's/Image.ANTIALIAS/Image.Resampling.LANCZOS/g' {} \;
 
 # Run the main script
 run:
