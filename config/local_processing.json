@@ -1,0 +1,30 @@
+{
+  "processing": {
+    "max_width": 1920,
+    "max_height": 1080,
+    "compression_level": "medium",
+    "output_format": "mp4",
+    "lossless": false,
+    "output_dir": "output"
+  },
+  "local_videos": [
+    {
+      "name": "my_video",
+      "local_path": "/path/to/your/video.mp4",
+      "output_format": "webm",
+      "processing": {
+        "max_width": 1280,
+        "compression_level": "high"
+      }
+    },
+    {
+      "name": "another_video",
+      "local_path": "/path/to/another/video.avi",
+      "output_format": "mp4",
+      "processing": {
+        "scale_factor": 0.8,
+        "compression_level": "medium"
+      }
+    }
+  ]
+}
