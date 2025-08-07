@@ -109,8 +109,17 @@ venv.bak/
 Thumbs.db
 
 # Downloaded videos and temporary files
+local_videos/*
 downloads/
 *.mp4
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.mp3
+*.m4a
+*.ogg
 *.mkv
 *.avi
 *.mov
