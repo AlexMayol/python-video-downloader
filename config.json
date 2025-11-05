@@ -1,0 +1,21 @@
+{
+  "processing": {
+    "max_width": 1920,
+    "max_height": 1080,
+    "compression_level": "medium",
+    "output_format": "mp4",
+    "lossless": false,
+    "output_dir": "output"
+  },
+  "local_videos": [
+    {
+      "name": "test",
+      "local_path": "/local_videos/rap_flex.mp4",
+      "output_format": "mp4",
+      "processing": {
+        "max_width": 1280,
+        "compression_level": "high"
+      }
+    }
+  ]
+}

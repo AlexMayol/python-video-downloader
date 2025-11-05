@@ -1,0 +1,30 @@
+processing:
+  max_width: 1280
+  max_height: 720
+  compression_level: medium
+  output_format: webm
+  lossless: false
+  output_dir: output
+
+local_videos:
+  - name: family_vacation
+    local_path: /Users/yourname/Videos/vacation.mov
+    output_format: mp4
+    processing:
+      compression_level: high
+      max_width: 1920
+  
+  - name: presentation_recording  
+    local_path: /Users/yourname/Documents/presentation.mp4
+    output_format: webm
+    processing:
+      scale_factor: 0.5
+      compression_level: low
+
+  - name: old_home_video
+    local_path: /Users/yourname/Videos/old_video.avi
+    output_format: mp4
+    processing:
+      max_width: 854
+      max_height: 480
+      compression_level: medium

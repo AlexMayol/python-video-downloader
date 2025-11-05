@@ -1,0 +1,17 @@
+{
+  "processing": {
+    "max_width": 1920,
+    "max_height": 1080,
+    "compression_level": "medium",
+    "output_format": "mp4",
+    "lossless": false,
+    "output_dir": "output"
+  },
+  "videos": [
+    {
+      "name": "example_video",
+      "url": "https://example.com/video.mp4",
+      "output_format": "mp4"
+    }
+  ]
+}
